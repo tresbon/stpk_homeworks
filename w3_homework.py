@@ -191,77 +191,6 @@ try:
 
             goods_counter = 0
 
-    '''Тест 5 - проверка числа найденных товаров через поиск
-    (в названиях товаров)
-    1. Пройти по собранным на предыдущем шаге ссылкам на
-    товары и собрать wordheap из названий и описаний товаров
-    2. Посчитать число вхождений этого слова в wordheap
-    3. Ввести слово в строку поиска на главной странице
-    4. Посчитать число найденных товаро
-    5. Проверить что число найденных товаров равно
-    числу вхождений слова в wordheap
-    '''
-    def get_wordheap(goods_links):
-        'Creates wordheaps from goods names and descriptions'
-        heap = dict()
-        #Проходим по линкам на товары
-        for i,v in enumerate(goods_links):
-            browser.get(v)
-            #Cобираем имена
-            gname = WebDriverWait(browser, 5).until(
-        EC.presence_of_element_located((By.CSS_SELECTOR, \
-            'h1'))
-        ).text
-            #Собираем описания
-            gdesc = browser.find_element(By.CSS_SELECTOR, \
-                'div#product_description ~ p').text if \
-                browser.find_elements(By.CSS_SELECTOR, \
-                'div#product_description ~ p') else ''
-            #Добавляем кучу в словарь
-            heap[i] = gname.strip().split() + gdesc.strip().split()
-            
-        return heap
-
-    #Создаём словарь куч
-    wordheaps = get_wordheap(goods_links)
-
-    #Создаём кучу из всех слов
-    wordheap = []
-    for k in wordheaps:
-        wordheap = wordheap + wordheaps[k]
-
-    #Выбираем случайное слово из кучи длиной больше 3
-    word = choice([i for i in wordheap if len(i) > 3])
-
-    #Считаем сколько раз слово встречается в названиях
-    #и описаниях товаров, вхождение считается если слово
-    #встречается в начале названия
-    counter = 0
-    for k in wordheaps:
-        if re.search('^'+ word, ' '.join(wordheaps[k]), re.IGNORECASE):
-            counter += 1
-
-    browser.get('http://selenium1py.pythonanywhere.com/ru/')
-
-    search_input = browser.find_element(By.CSS_SELECTOR, \
-            'input[type="search"]')
-    search_input.send_keys(word)
-
-    search_button = browser.find_element(By.CSS_SELECTOR, \
-            'input[type="submit"][value="Найти"]')
-    search_button.click()
-
-    nfound = browser.find_element(By.CSS_SELECTOR, \
-            '#promotions ~ form strong').text
-    
-    try:
-        assert int(nfound) == counter
-        print (f'Test#5 search goods by {word} passed')
-
-    except AssertionError:
-        print (f'Test#5 search goods by {word} NOT passed',
-        nfound, 'found', counter, 'in heap')
-
     '''Тест №6 стоимость добавленного в корзину товара
     отображается возле корзины
     1. Перейти в случайную категорию
@@ -275,6 +204,14 @@ try:
         'ol.row li button[data-loading-text="Добавление..."]'):
             choose_valid_category(sitemap_categories)
         return cat
+    
+    def choose_valid_good(goods):
+        '''Recusrively chooses valid category'''
+        good = choice(goods)
+        if not good.find_elements(By.CSS_SELECTOR, \
+        'ol.row li button[data-loading-text="Добавление..."]'):
+            choose_valid_good(goods)
+        return good
 
     cat = choose_valid_category(sitemap_categories)
 
@@ -282,8 +219,11 @@ try:
 
     goods = browser.find_elements(By.CSS_SELECTOR, \
         'article.product_pod')
+    goods = [i for i in goods if 
+        i.find_elements(By.CSS_SELECTOR, \
+        'ol.row li button[data-loading-text="Добавление..."]')]
 
-    good = choice(goods)
+    good = choose_valid_good(goods)
 
     good_price = good.find_element(By.CSS_SELECTOR, \
         'p.price_color').text
@@ -325,8 +265,11 @@ try:
 
     goods = browser.find_elements(By.CSS_SELECTOR, \
         'article.product_pod')
+    goods = [i for i in goods if 
+        i.find_elements(By.CSS_SELECTOR, \
+        'ol.row li button[data-loading-text="Добавление..."]')]
 
-    good = choice(goods)
+    good = choose_valid_good(goods)
 
     good_link = good.find_element(By.CSS_SELECTOR, \
         'a').get_attribute('href')
@@ -336,16 +279,17 @@ try:
     good_button.click()
 
     basket_button = browser.find_element(By.CSS_SELECTOR, \
-        'div.basket-mini button')
+        'div.basket-mini a.btn')
     basket_button.click()
 
-    basket_links = good.find_elements(By.CSS_SELECTOR, \
-        'a')
+    basket_links = browser.find_elements(By.CSS_SELECTOR, \
+        '.basket-items a')
     basket_links = [i.get_attribute('href') for i in \
         basket_links]
 
     assert good_link in basket_links
-    print('Test #8 good in a basket passed')
+    print('Test #7 good in the basket passed')
+
 
     '''Тест №8 заказ
     1. Открыть корзину
@@ -366,7 +310,8 @@ try:
 
     #Логин
     registered = browser.find_element(By.CSS_SELECTOR, \
-        'a.btn[href*="checkout"]')
+        '#id_options_2')
+    registered.click()
 
     id_username = browser.find_element(By.CSS_SELECTOR, \
     '#id_username')
@@ -375,6 +320,10 @@ try:
     id_password = browser.find_element(By.CSS_SELECTOR, \
     '#id_password')
     id_password.send_keys(password)
+
+    cont = browser.find_element(By.CSS_SELECTOR, \
+    'button[type="submit"]')
+    cont.click()
 
     #Заполняем адрес
     first_name = browser.find_element(By.CSS_SELECTOR, \
@@ -398,7 +347,7 @@ try:
     id_postcode.send_keys('123123')
 
     country = Select(browser.find_element(By.CSS_SELECTOR, \
-        "id_country"))
+        "#id_country"))
     country.select_by_value("RU")
 
     submit = browser.find_element(By.CSS_SELECTOR, \
@@ -410,13 +359,85 @@ try:
     payment_next.click()
 
     place_order = browser.find_element(By.CSS_SELECTOR, \
-    '#view_preview')
+    '#place-order')
     place_order.click()
 
     lead = browser.find_element(By.CSS_SELECTOR, \
     'p.lead').text
 
     assert 'Ваш заказ был размещен' in lead
+    print('Test #8 Order passed')
+
+    '''Тест 5 - проверка числа найденных товаров через поиск
+    (в названиях товаров)
+    1. Пройти по собранным на предыдущем шаге ссылкам на
+    товары и собрать wordheap из названий и описаний товаров
+    2. Посчитать число вхождений этого слова в wordheap
+    3. Ввести слово в строку поиска на главной странице
+    4. Посчитать число найденных товаро
+    5. Проверить что число найденных товаров равно
+    числу вхождений слова в wordheap
+    '''
+ 
+    def get_wordheap(goods_links):
+        'Creates wordheaps from goods names and descriptions'
+        heap = dict()
+        #Проходим по линкам на товары
+        for i,v in enumerate(goods_links):
+            browser.get(v)
+            #Cобираем имена
+            gname = WebDriverWait(browser, 5).until(
+        EC.presence_of_element_located((By.CSS_SELECTOR, \
+            'h1'))
+        ).text
+            #Собираем описания
+            gdesc = browser.find_element(By.CSS_SELECTOR, \
+                'div#product_description ~ p').text if \
+                browser.find_elements(By.CSS_SELECTOR, \
+                'div#product_description ~ p') else ''
+            #Добавляем кучу в словарь
+            heap[i] = gname.strip().split() + gdesc.strip().split()
+            
+        return heap
+
+    #Создаём словарь куч
+    wordheaps = get_wordheap(goods_links)
+
+    #Создаём кучу из всех слов
+    wordheap = []
+    for k in wordheaps:
+        wordheap = wordheap + wordheaps[k]
+
+    #Выбираем случайное слово из кучи длиной больше 3
+    word = choice([i for i in wordheap if len(i) > 3])
+
+    #Считаем сколько раз слово встречается в названиях
+    #и описаниях товаров
+    counter = 0
+    for k in wordheaps:
+        if re.search(word, ' '.join(wordheaps[k]), re.IGNORECASE):
+            counter += 1
+     
+    browser.get('http://selenium1py.pythonanywhere.com/ru/')
+
+    search_input = browser.find_element(By.CSS_SELECTOR, \
+            'input[type="search"]')
+    search_input.send_keys(word)
+
+    search_button = browser.find_element(By.CSS_SELECTOR, \
+            'input[type="submit"][value="Найти"]')
+    search_button.click()
+
+    nfound = browser.find_element(By.CSS_SELECTOR, \
+            '#promotions ~ form strong').text
+    
+    try:
+        assert int(nfound) == counter
+        print (f'Test#5 search goods by {word} passed')
+
+    except AssertionError:
+        print (f'Test#5 search goods by {word} NOT passed',
+        nfound, 'found', counter, 'in heap')
 
 finally:
 
