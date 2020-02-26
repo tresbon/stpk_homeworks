@@ -35,7 +35,8 @@ password = generate_pass(5,4)
 4. Заполнить поле #id_registration-password1 паролем
 (9 символов хотя бы одна цифра и хотя бы одна буква)
 5. Повторить пароль в поле #id_registration-password2
-6. Выбрать кнопку form#register_form button[name='registration_submit'] и кликнуть
+6. Выбрать кнопку form#register_form button[name='registration_submit']
+и кликнуть
 7. Удостовериться что появилось сообщение 'Спасибо за регистрацию!'
 '''
 
@@ -52,10 +53,12 @@ try:
     )
     email.send_keys(mail)
 
-    pass1 = browser.find_element_by_css_selector('#id_registration-password1')
+    pass1 = browser.find_element_by_css_selector(\
+        '#id_registration-password1')
     pass1.send_keys(password)
 
-    pass2 = browser.find_element_by_css_selector('#id_registration-password2')
+    pass2 = browser.find_element_by_css_selector(\
+        '#id_registration-password2')
     pass2.send_keys(password)
 
     button = browser.find_element_by_css_selector(\
@@ -75,8 +78,10 @@ try:
     Тест №2 при повторном открытии вход выполнен
     1. Создать новую вкладку
     2. Закрыть текущую вкладку
-    3. Перейти на новой вкладке по адресу http://selenium1py.pythonanywhere.com/ru/
-    4. Найти элемент ul.nav.navbar-nav.navbar-right a[href="/ru/accounts/"]
+    3. Перейти на новой вкладке по адресу 
+    http://selenium1py.pythonanywhere.com/ru/
+    4. Найти элемент
+    ul.nav.navbar-nav.navbar-right a[href="/ru/accounts/"]
     5. Если в элементе есть текст "Аккаунт" - тест пройден
     '''
 
@@ -98,7 +103,8 @@ try:
     Тест №3 в профиле сохранён верный email
     1. Перейти в аккаунт
     2. Выбрать элемент table tr:nth-child(2) td
-    3. Проверить что в поле вписан тот же email что указан при регистрации
+    3. Проверить что в поле вписан тот же email что указан 
+    при регистрации
     '''
 
     acc.click()
@@ -158,8 +164,7 @@ try:
         'article.product_pod h3 a')
 
         for g in goods:
-            goods_links.append('http://selenium1py.pythonanywhere.com' +\
-                g.get_attribute('href'))
+            goods_links.append(g.get_attribute('href'))
 
         goods_counter += len(goods)
 
@@ -174,8 +179,7 @@ try:
             'article.product_pod h3 a')
 
             for g in goods:
-                goods_links.append('http://selenium1py.pythonanywhere.com' +\
-                    g.get_attribute('href'))
+                goods_links.append(g.get_attribute('href'))
 
             goods_counter += len(goods)
 
@@ -197,39 +201,51 @@ try:
     5. Проверить что число найденных товаров равно
     числу вхождений слова в wordheap
     '''
-    
     def get_wordheap(goods_links):
+        'Creates wordheaps from goods names and descriptions'
         heap = dict()
+        #Проходим по линкам на товары
         for i,v in enumerate(goods_links):
             browser.get(v)
-            time.sleep(.5)
-            gname = browser.find_element(By.CSS_SELECTOR, 'h1').text
+            #Cобираем имена
+            gname = WebDriverWait(browser, 5).until(
+        EC.presence_of_element_located((By.CSS_SELECTOR, \
+            'h1'))
+        ).text
+            #Собираем описания
             gdesc = browser.find_element(By.CSS_SELECTOR, \
-                'div#product_description ~ p').text
-            heap[i] = gname.strip().split() + gdesc.stip().split()
+                'div#product_description ~ p').text if \
+                browser.find_elements(By.CSS_SELECTOR, \
+                'div#product_description ~ p') else ''
+            #Добавляем кучу в словарь
+            heap[i] = gname.strip().split() + gdesc.strip().split()
             
         return heap
 
+    #Создаём словарь куч
     wordheaps = get_wordheap(goods_links)
 
+    #Создаём кучу из всех слов
     wordheap = []
     for k in wordheaps:
         wordheap = wordheap + wordheaps[k]
 
+    #Выбираем случайное слово из кучи длиной больше 3
     word = choice([i for i in wordheap if len(i) > 3])
 
+    #Считаем сколько раз слово встречается в названиях
+    #и описаниях товаров, вхождение считается если слово
+    #встречается в начале названия
     counter = 0
-
     for k in wordheaps:
-        if re.search('^'+ word, wordheaps[k], re.IGNORECASE):
+        if re.search('^'+ word, ' '.join(wordheaps[k]), re.IGNORECASE):
             counter += 1
 
     browser.get('http://selenium1py.pythonanywhere.com/ru/')
 
-    search = browser.find_element(By.CSS_SELECTOR, \
+    search_input = browser.find_element(By.CSS_SELECTOR, \
             'input[type="search"]')
-
-    search.send_keys(word)
+    search_input.send_keys(word)
 
     search_button = browser.find_element(By.CSS_SELECTOR, \
             'input[type="submit"][value="Найти"]')
@@ -240,10 +256,11 @@ try:
     
     try:
         assert int(nfound) == counter
-        print ('Test#5 nfound goods in names passed')
+        print (f'Test#5 search goods by {word} passed')
 
     except AssertionError:
-        print ('Test#5 nfound goods in names NOT passed')
+        print (f'Test#5 search goods by {word} NOT passed',
+        nfound, 'found', counter, 'in heap')
 
     '''Тест №6 стоимость добавленного в корзину товара
     отображается возле корзины
@@ -297,8 +314,109 @@ try:
     1. Перейти в случайную категорию
     2. Добавить товар в корзину
     3. Перейти в корзину
-    4. Проверить что добавленный товар есть в корзине
+    4. Проверить что добавленный товар есть в корзине,
+    для этого смотрим есть ли ссылка которая вела на
+    страницу товара среди ссылок которые ведут на страницы 
+    товаров, добавленных в корзину
     '''
+    cat = choose_valid_category(sitemap_categories)
+
+    browser.get(cat)
+
+    goods = browser.find_elements(By.CSS_SELECTOR, \
+        'article.product_pod')
+
+    good = choice(goods)
+
+    good_link = good.find_element(By.CSS_SELECTOR, \
+        'a').get_attribute('href')
+
+    good_button = good.find_element(By.CSS_SELECTOR, \
+        'button[data-loading-text="Добавление..."]')
+    good_button.click()
+
+    basket_button = browser.find_element(By.CSS_SELECTOR, \
+        'div.basket-mini button')
+    basket_button.click()
+
+    basket_links = good.find_elements(By.CSS_SELECTOR, \
+        'a')
+    basket_links = [i.get_attribute('href') for i in \
+        basket_links]
+
+    assert good_link in basket_links
+    print('Test #8 good in a basket passed')
+
+    '''Тест №8 заказ
+    1. Открыть корзину
+    2. Нажать "Перейти к оформлению"
+    3. Ввести логин и пароль
+    4. Заполнить необходимые поля
+    4. Пройти страницу оплаты
+    5. Подтвердить заказ на странице подтверждения
+    6. Проверить что есть текст 'Ваш заказ был размещен'
+    в элемент p.lead
+    '''
+
+    browser.get('http://selenium1py.pythonanywhere.com/ru/basket/')
+
+    checkout_button = browser.find_element(By.CSS_SELECTOR, \
+        'a.btn[href*="checkout"]')
+    checkout_button.click()
+
+    #Логин
+    registered = browser.find_element(By.CSS_SELECTOR, \
+        'a.btn[href*="checkout"]')
+
+    id_username = browser.find_element(By.CSS_SELECTOR, \
+    '#id_username')
+    id_username.send_keys(mail)
+
+    id_password = browser.find_element(By.CSS_SELECTOR, \
+    '#id_password')
+    id_password.send_keys(password)
+
+    #Заполняем адрес
+    first_name = browser.find_element(By.CSS_SELECTOR, \
+    '#id_first_name')
+    first_name.send_keys(generate_pass(10,0))
+
+    id_last_name = browser.find_element(By.CSS_SELECTOR, \
+    '#id_last_name')
+    id_last_name.send_keys(generate_pass(10,0))
+
+    id_line1 = browser.find_element(By.CSS_SELECTOR, \
+    '#id_line1')
+    id_line1.send_keys(generate_pass(10,0))
+     
+    id_line4 = browser.find_element(By.CSS_SELECTOR, \
+    '#id_line4')
+    id_line4.send_keys(generate_pass(10,0))
+
+    id_postcode = browser.find_element(By.CSS_SELECTOR, \
+    '#id_postcode')
+    id_postcode.send_keys('123123')
+
+    country = Select(browser.find_element(By.CSS_SELECTOR, \
+        "id_country"))
+    country.select_by_value("RU")
+
+    submit = browser.find_element(By.CSS_SELECTOR, \
+        'button[data-loading-text="Продолжаем..."]')
+    submit.click()
+
+    payment_next = browser.find_element(By.CSS_SELECTOR, \
+    '#view_preview')
+    payment_next.click()
+
+    place_order = browser.find_element(By.CSS_SELECTOR, \
+    '#view_preview')
+    place_order.click()
+
+    lead = browser.find_element(By.CSS_SELECTOR, \
+    'p.lead').text
+
+    assert 'Ваш заказ был размещен' in lead
 
 finally:
 
