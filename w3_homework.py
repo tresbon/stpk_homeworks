@@ -3,6 +3,7 @@ from selenium import webdriver
 from random import choice
 import time
 from lxml import etree
+import re
 from requests import request
 from selenium.webdriver.support.ui import Select
 from selenium.webdriver.common.by import By
@@ -173,8 +174,8 @@ try:
             'article.product_pod h3 a')
 
             for g in goods:
-            goods_links.append('http://selenium1py.pythonanywhere.com' +\
-                g.get_attribute('href'))
+                goods_links.append('http://selenium1py.pythonanywhere.com' +\
+                    g.get_attribute('href'))
 
             goods_counter += len(goods)
 
@@ -197,14 +198,30 @@ try:
     числу вхождений слова в wordheap
     '''
     
-    
+    def get_wordheap(goods_links):
+        heap = dict()
+        for i,v in enumerate(goods_links):
+            browser.get(v)
+            time.sleep(.5)
+            gname = browser.find_element(By.CSS_SELECTOR, 'h1').text
+            gdesc = browser.find_element(By.CSS_SELECTOR, \
+                'div#product_description ~ p').text
+            heap[i] = gname.strip().split() + gdesc.stip().split()
+            
+        return heap
+
+    wordheaps = get_wordheap(goods_links)
+
+    wordheap = []
+    for k in wordheaps:
+        wordheap = wordheap + wordheaps[k]
 
     word = choice([i for i in wordheap if len(i) > 3])
 
     counter = 0
 
-    for w in wordheap:
-        if word.lower() in w.lower():
+    for k in wordheaps:
+        if re.search('^'+ word, wordheaps[k], re.IGNORECASE):
             counter += 1
 
     browser.get('http://selenium1py.pythonanywhere.com/ru/')
