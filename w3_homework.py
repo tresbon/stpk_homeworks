@@ -431,6 +431,7 @@ try:
     nfound = browser.find_element(By.CSS_SELECTOR, \
             '#promotions ~ form strong').text
     
+    #Тест постоянно валился, видимо нужно доработать поиск
     try:
         assert int(nfound) == counter
         print (f'Test#5 search goods by {word} passed')
