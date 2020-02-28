@@ -1,4 +1,4 @@
-#Homeworks for stepik automation course
+# Homeworks for stepik automation course
 
 start of filename means number of week
 
