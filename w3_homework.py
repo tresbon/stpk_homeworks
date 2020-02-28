@@ -11,9 +11,9 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
 def generate_mail():
-    '''Generates email with 3 letters @ 3 letters . 3 letters'''
+    '''Generates email with 5 letters @ 3 letters . 3 letters'''
     letters = [chr(i) for i in range(ord('a'),ord('z')+1)]
-    return ''.join(choice(letters) for l in range(3)) + '@' +\
+    return ''.join(choice(letters) for l in range(5)) + '@' +\
         ''.join([choice(letters) for l in range(3)])  + '.' +\
         ''.join([choice(letters) for l in range(3)]) 
 
@@ -72,7 +72,6 @@ try:
 
     assert 'Спасибо за регистрацию!' in success_message.text
     print('Test #1 Sing Up passed')
-
 
     '''
     Тест №2 при повторном открытии вход выполнен
@@ -135,7 +134,7 @@ time.sleep(2) #Пауза перед новым запуском браузер�
 5. Если число соответствует - вывести сообщение в консоль
 6. Повторить для всех категорий из sitemap-categories-ru.xml
 
-Параллельно собрать wordheap из названий товаров'''
+Параллельно собрать ссылки на товары'''
 
 try:
 
@@ -382,6 +381,8 @@ try:
     def get_wordheap(goods_links):
         'Creates wordheaps from goods names and descriptions'
         heap = dict()
+        #Убираем дубликаты ссылок на товары
+        goods_links = list(set(goods_links))
         #Проходим по линкам на товары
         for i,v in enumerate(goods_links):
             browser.get(v)
@@ -408,8 +409,8 @@ try:
     for k in wordheaps:
         wordheap = wordheap + wordheaps[k]
 
-    #Выбираем случайное слово из кучи длиной больше 3
-    word = choice([i for i in wordheap if len(i) > 3])
+    #Выбираем случайное слово из кучи длиной больше 5
+    word = choice([i for i in wordheap if len(i) > 5])
 
     #Считаем сколько раз слово встречается в названиях
     #и описаниях товаров
@@ -417,17 +418,21 @@ try:
     for k in wordheaps:
         if re.search(word, ' '.join(wordheaps[k]), re.IGNORECASE):
             counter += 1
-     
+    
+    #На главную
     browser.get('http://selenium1py.pythonanywhere.com/ru/')
 
+    #Вводим слово в поиск
     search_input = browser.find_element(By.CSS_SELECTOR, \
             'input[type="search"]')
     search_input.send_keys(word)
 
+    #Жмём кнопку поиска
     search_button = browser.find_element(By.CSS_SELECTOR, \
             'input[type="submit"][value="Найти"]')
     search_button.click()
 
+    #Подбираем число найденных
     nfound = browser.find_element(By.CSS_SELECTOR, \
             '#promotions ~ form strong').text
     
