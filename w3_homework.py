@@ -212,14 +212,6 @@ try:
         'ol.row li button[data-loading-text="Добавление..."]'):
             choose_valid_category(sitemap_categories)
         return cat
-    
-    def choose_valid_good(goods):
-        '''Recusrively chooses valid category'''
-        good = choice(goods)
-        if not good.find_elements(By.CSS_SELECTOR, \
-        'ol.row li button[data-loading-text="Добавление..."]'):
-            choose_valid_good(goods)
-        return good
 
     cat = choose_valid_category(sitemap_categories)
 
@@ -231,7 +223,7 @@ try:
         i.find_elements(By.CSS_SELECTOR, \
         'ol.row li button[data-loading-text="Добавление..."]')]
 
-    good = choose_valid_good(goods)
+    good = choose_valid_category(goods)
 
     good_price = good.find_element(By.CSS_SELECTOR, \
         'p.price_color').text
@@ -277,7 +269,7 @@ try:
         i.find_elements(By.CSS_SELECTOR, \
         'ol.row li button[data-loading-text="Добавление..."]')]
 
-    good = choose_valid_good(goods)
+    good = choose_valid_category(goods)
 
     good_link = good.find_element(By.CSS_SELECTOR, \
         'a').get_attribute('href')
