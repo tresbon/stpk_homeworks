@@ -137,36 +137,44 @@ time.sleep(2) #Пауза перед новым запуском браузер�
 Параллельно собрать ссылки на товары'''
 
 try:
-
+    #Парсим sitemap
     root = etree.fromstring(request('GET',\
         'http://selenium1py.pythonanywhere.com/sitemap-categories-ru.xml'\
             ).content)
     sitemap_categories = [i[0].text.replace('example.com',\
         'selenium1py.pythonanywhere.com') for i in root]
 
+    #Добавляем счётчик товаров
     goods_counter = 0
 
+    #Создаём список для сбора ссылок на товары
     goods_links = list()
+
 
     browser = webdriver.Chrome()
 
+    #Проходимся по категориям из sitemap
     for cat in sitemap_categories:
 
         browser.get(cat)
 
+        #Подбираем число товаров отображаемое на странице
         ngoods = browser.find_element(By.CSS_SELECTOR, \
             '#promotions ~ form strong:nth-child(2)').text
-
         ngoods = int(ngoods)
 
+        #Подбираем ссылки на товары
         goods = browser.find_elements(By.CSS_SELECTOR, \
         'article.product_pod h3 a')
 
+        #Записываем ссылки на товары в список
         for g in goods:
             goods_links.append(g.get_attribute('href'))
 
+        #Добавляем товары в счётчик
         goods_counter += len(goods)
 
+        #Циклом проходим по категории пока есть кнопка "Далее"
         while browser.find_elements(By.CSS_SELECTOR, \
             'ul.pager li.next a'):
 
@@ -182,6 +190,7 @@ try:
 
             goods_counter += len(goods)
 
+        #Если кнопки "Далее" нет - пишем результат, обнуляем счётчик
         else:
 
             assert goods_counter == ngoods
